@@ -9,3 +9,11 @@
 html {
     font: 16px/1.5 Poppins, sans-serif;
 }
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+img.dot {
+    width: 15px !important;
+}

@@ -8,7 +8,7 @@
 .chat-container {
     width: 95%;
     height: 75vh;
-    max-width: 100px;
+    max-width: 1000px;
     background-color: #f0f8ff;
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
