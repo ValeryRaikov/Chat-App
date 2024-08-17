@@ -9,6 +9,11 @@ export default function LeftSidebar() {
                     <img src={assets.logo} alt={assets.logo.toString()} className="logo" />
                     <div className="menu">
                         <img src={assets.menu_icon} alt={assets.menu_icon.toString()} />
+                        <div className="submenu">
+                            <p>Edit Profile</p>
+                            <hr />
+                            <p>Logout</p>
+                        </div>
                     </div>
                 </div>
                 <div className="ls-search">
