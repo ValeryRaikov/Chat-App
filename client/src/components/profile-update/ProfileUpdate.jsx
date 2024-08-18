@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+
+import { AppContext } from '../../context/AppContext';
 
 import './ProfileUpdate.css';
 import assets from '../../assets/assets';
@@ -17,6 +19,7 @@ export default function ProfileUpdate() {
     const [bio, setBio] = useState('');
     const [uid, setUid] = useState('');
     const [prevImage, setPrevImage] = useState('');
+    const { setUserData } = useContext(AppContext);
 
     useEffect(() => {
         onAuthStateChanged(auth, async (user) => {
@@ -66,8 +69,13 @@ export default function ProfileUpdate() {
                     name,
                 });
             }
+
+            const snap = await getDoc(docRef);
+            setUserData(snap.data());
+            navigate('/chat');
         } catch (err) {
-            
+            console.error(err);
+            toast.error(err.message);
         }
     }
 
@@ -116,7 +124,10 @@ export default function ProfileUpdate() {
                 </form>
                 <img src={image 
                             ? URL.createObjectURL(image) 
-                            : assets.logo_icon} 
+                            : prevImage 
+                                ? prevImage
+                                : assets.logo_icon
+                        } 
                 alt={assets.logo_icon.toString()} className="profile-pic" />
             </div>
         </div>
