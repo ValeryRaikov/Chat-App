@@ -45,7 +45,7 @@ const AppContextProvider = ({children}) => {
         if (userData) {
             const chatRef = doc(db, 'chats', userData.id);
             const unsubscribe = onSnapshot(chatRef, async (response) => {
-                const chatItems = response.data().chatData;
+                const chatItems = response.data().chatsData;
                 const tempData = [];
                 for (const item of chatItems) {
                     const userRef = doc(db, 'users', item.rId);
