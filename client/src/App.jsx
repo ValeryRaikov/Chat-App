@@ -15,13 +15,16 @@ import ProfileUpdate from "./components/profile-update/ProfileUpdate";
 
 function App() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { loadUserData } = useContext(AppContext);
 
     useEffect(() => {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await loadUserData(user.uid);
-                navigate('/chat');
+                
+                const destination = location.pathname === '/' ? '/chat' : location.pathname;
+                navigate(destination);
             } else {
                 navigate('/');
             }
