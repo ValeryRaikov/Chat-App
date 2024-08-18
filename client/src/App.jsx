@@ -12,37 +12,29 @@ import { AppContext } from "./context/AppContext";
 import Login from "./components/login/Login";
 import Chat from "./components/chat/Chat";
 import ProfileUpdate from "./components/profile-update/ProfileUpdate";
-import PrivateRoutes from "./components/private-routes/PrivateRoutes";
 
 function App() {
     const navigate = useNavigate();
-    const location = useLocation();
     const { loadUserData } = useContext(AppContext);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await loadUserData(user.uid);
-
-                const destination = location.pathname === '/' ? '/chat' : location.pathname;
-                navigate(destination);
+                navigate('/chat');
             } else {
                 navigate('/');
             }
         });
-
-        return () => unsubscribe(); 
-    }, [navigate, loadUserData, location.pathname]);
+    }, []);
 
     return (
         <>
             <ToastContainer />
             <Routes>
                 <Route path='/' element={<Login />} />
-                <Route element={<PrivateRoutes />}>
-                    <Route path='/chat' element={<Chat />} />
-                    <Route path='/profile' element={<ProfileUpdate />} />
-                </Route>
+                <Route path='/chat' element={<Chat />} />
+                <Route path='/profile' element={<ProfileUpdate />} />
             </Routes>
         </>
     );
