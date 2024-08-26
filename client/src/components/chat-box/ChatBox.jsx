@@ -2,11 +2,12 @@ import { useContext, useEffect, useState } from 'react';
 
 import { AppContext } from '../../context/AppContext';
 
-import { doc, onSnapshot } from 'firebase/firestore';
+import { arrayUnion, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 import './ChatBox.css';
 import assets from '../../assets/assets';
+import { toast } from 'react-toastify';
 
 export default function ChatBox() {
     const {
@@ -19,11 +20,54 @@ export default function ChatBox() {
 
     const [input, setInput] = useState('');
 
+    const sendMessage = async () => {
+        try {
+            if (input && messagesId) {
+                await updateDoc(doc(db, 'messages', messagesId), {
+                    messages: arrayUnion({
+                        sId: userData.id,
+                        text: input,
+                        createdAt: new Date(),
+                    })
+                });
+
+                const userIds = [chatUser.rId, userData.id]; 
+
+                userIds.forEach(async (id) => {
+                    const userChatsRef = doc(db, 'chats', id);
+                    const userChatsSnapshot = await getDoc(userChatsRef);
+
+                    if (userChatsSnapshot.exists()) {
+                        const userChatData = userChatsSnapshot.data();
+                        const chatIdx = userChatData.chatsData.findIndex(
+                            (c) => c.messageId === messagesId
+                        );
+                        userChatData.chatsData[chatIdx].lastMessage = input.slice(0, 30);
+                        userChatData.chatsData[chatIdx].updatedAt = Date.now();
+
+                        if (userChatData.chatsData[chatIdx].rId === userData.id) {
+                            userChatData.chatsData[chatIdx].messageSeen = false;
+                        }
+
+                        await updateDoc(userChatsRef, {
+                            chatsData: userChatData.chatsData,
+                        });
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(err.message);
+            toast.error(err.message);
+        }
+
+        setInput('');
+    }
+
     useEffect(() => {
         if (messagesId) {
             const unsubscribe = onSnapshot(doc(db, 'messages', messagesId), (res) => {
                 setMessages(res.data().messages.reverse());
-                console.log(res.data().messages.reverse());
+                console.log(res.data().messages.reverse()); //
             });
 
             return () => unsubscribe();
@@ -62,12 +106,17 @@ export default function ChatBox() {
                 </div>
             </div>
             <div className="chat-input">
-                <input type="text" placeholder="Send a message" />
+                <input 
+                    onChange={(e) => setInput(e.target.value)}
+                    value={input}
+                    type="text" 
+                    placeholder="Send a message"
+                />
                 <input type="file" id="image" accept="image/png, image/jpeg" hidden />
                 <label htmlFor="image">
                     <img src={assets.gallery_icon} alt={assets.gallery_icon.toString()} />
                 </label>
-                <img src={assets.send_button} alt={assets.send_button.toString()} />
+                <img onClick={sendMessage} src={assets.send_button} alt={assets.send_button.toString()} />
             </div>
         </div>
     )
