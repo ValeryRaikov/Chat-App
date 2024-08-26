@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import { arrayUnion, collection, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { arrayUnion, collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 import './LeftSidebar.css';
@@ -95,8 +95,23 @@ export default function LeftSidebar() {
     }
 
     const setChat = async (item) => {
-        setMessagesId(item.messageId);
-        setChatUser(item);
+        try {
+            setMessagesId(item.messageId);
+            setChatUser(item);
+
+            const userChatsRef = doc(db, 'chats', userData.id);
+            const userChatsSnapshot = await getDoc(userChatsRef);
+            const userChatsData = userChatsSnapshot.data();
+            const chatIdx = userChatsData.chatsData.findIndex((c) => c.messageId === item.messageId);
+
+            userChatsData.chatsData[chatIdx].messageSeen = true;
+            await updateDoc(userChatsRef, {
+                chatData: userChatsData.chatsData,
+            });
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message);
+        }
     }
 
     return (
@@ -129,7 +144,11 @@ export default function LeftSidebar() {
                         <p>{user.name}</p>
                     </div>
                     : chatData?.map((item, idx) => (
-                        <div onClick={() => setChat(item)} key={idx} className="friends">
+                        <div   
+                            onClick={() => setChat(item)} 
+                            key={idx} 
+                            className={`friends ${item.messageSeen || item.messageId === messagesId ? '' : 'border'}`}
+                        >
                             <img src={item.userData.avatar} alt="" />
                             <div>
                                 <p>{item.userData.name}</p>
