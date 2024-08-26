@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import { AppContext } from '../../context/AppContext';
 
@@ -7,7 +8,9 @@ import { db } from '../config/firebase';
 
 import './ChatBox.css';
 import assets from '../../assets/assets';
-import { toast } from 'react-toastify';
+
+import upload from '../../lib/upload';
+import convertTimestamp from '../../utils/timeConverter';
 
 export default function ChatBox() {
     const {
@@ -63,11 +66,53 @@ export default function ChatBox() {
         setInput('');
     }
 
+    const sendImage = async (e) => {
+        try {
+            const fileUrl = await upload(e.target.files[0]);
+
+            if (fileUrl && messagesId) {
+                await updateDoc(doc(db, 'messages', messagesId), {
+                    messages: arrayUnion({
+                        sId: userData.id,
+                        image: fileUrl,
+                        createdAt: new Date(),
+                    })
+                });
+
+                const userIds = [chatUser.rId, userData.id]; 
+
+                userIds.forEach(async (id) => {
+                    const userChatsRef = doc(db, 'chats', id);
+                    const userChatsSnapshot = await getDoc(userChatsRef);
+
+                    if (userChatsSnapshot.exists()) {
+                        const userChatData = userChatsSnapshot.data();
+                        const chatIdx = userChatData.chatsData.findIndex(
+                            (c) => c.messageId === messagesId
+                        );
+                        userChatData.chatsData[chatIdx].lastMessage = 'Image';
+                        userChatData.chatsData[chatIdx].updatedAt = Date.now();
+
+                        if (userChatData.chatsData[chatIdx].rId === userData.id) {
+                            userChatData.chatsData[chatIdx].messageSeen = false;
+                        }
+
+                        await updateDoc(userChatsRef, {
+                            chatsData: userChatData.chatsData,
+                        });
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(err.message);
+            toast.error(err.message);
+        }
+    }
+
     useEffect(() => {
         if (messagesId) {
             const unsubscribe = onSnapshot(doc(db, 'messages', messagesId), (res) => {
                 setMessages(res.data().messages.reverse());
-                console.log(res.data().messages.reverse()); //
             });
 
             return () => unsubscribe();
@@ -83,27 +128,18 @@ export default function ChatBox() {
                 <img src={assets.help_icon} alt={assets.help_icon.toString()} className="help" />
             </div>
             <div className="chat-msg">
-                <div className="s-msg">
-                    <p className="msg">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Earum, corporis?</p>
-                    <div>
-                        <img src={assets.profile_img} alt={assets.profile_img.toString()} />
-                        <p>2: 30 PM</p>
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={msg.sId === userData.id ? 's-msg' : 'r-msg'}>
+                        {msg['image']
+                            ? <img src={msg.image} alt="" className='msg-img' />
+                            : <p className="msg">{msg.text}</p>
+                        }
+                        <div>
+                            <img src={msg.sId === userData.id ? userData.avatar : chatUser.userData.avatar} />
+                            <p>{convertTimestamp(msg.createdAt)}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="s-msg">
-                    <img src={assets.pic1} alt="" className="msg-img" />
-                    <div>
-                        <img src={assets.profile_img} alt={assets.profile_img.toString()} />
-                        <p>2: 30 PM</p>
-                    </div>
-                </div>
-                <div className="r-msg">
-                    <p className="msg">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Earum, corporis?</p>
-                    <div>
-                        <img src={assets.profile_img} alt={assets.profile_img.toString()} />
-                        <p>2: 30 PM</p>
-                    </div>
-                </div>
+                ))}
             </div>
             <div className="chat-input">
                 <input 
@@ -112,7 +148,13 @@ export default function ChatBox() {
                     type="text" 
                     placeholder="Send a message"
                 />
-                <input type="file" id="image" accept="image/png, image/jpeg" hidden />
+                <input 
+                    onChange={sendImage}
+                    type="file" 
+                    id="image" 
+                    accept="image/png, image/jpeg" 
+                    hidden 
+                />
                 <label htmlFor="image">
                     <img src={assets.gallery_icon} alt={assets.gallery_icon.toString()} />
                 </label>
