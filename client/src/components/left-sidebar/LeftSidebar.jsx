@@ -106,7 +106,7 @@ export default function LeftSidebar() {
 
             userChatsData.chatsData[chatIdx].messageSeen = true;
             await updateDoc(userChatsRef, {
-                chatData: userChatsData.chatsData,
+                chatsData: userChatsData.chatsData,
             });
         } catch (err) {
             console.error(err);
