@@ -124,7 +124,10 @@ export default function ChatBox() {
         <div className="chat-box">
             <div className="chat-user">
                 <img src={chatUser.userData.avatar} alt={assets.profile_img.toString()} />
-                <p>{chatUser.userData.name} <img src={assets.green_dot} alt={assets.green_dot.toString()} className="dot" /></p>
+                <p>{chatUser.userData.name} {Date.now() - chatUser.userData.lastSeen <= 70000 
+                    ? <img src={assets.green_dot} alt={assets.green_dot.toString()} className="dot" />
+                    : null
+                }</p>
                 <img src={assets.help_icon} alt={assets.help_icon.toString()} className="help" />
             </div>
             <div className="chat-msg">
