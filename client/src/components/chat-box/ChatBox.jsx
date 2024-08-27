@@ -19,6 +19,8 @@ export default function ChatBox() {
         chatUser,
         messages,
         setMessages,
+        chatVisible,
+        setChatVisible,
     } = useContext(AppContext);
 
     const [input, setInput] = useState('');
@@ -121,7 +123,7 @@ export default function ChatBox() {
 
 
     return chatUser ? (
-        <div className="chat-box">
+        <div className={`chat-box ${chatVisible ? '' : 'hidden'}`}>
             <div className="chat-user">
                 <img src={chatUser.userData.avatar} alt={assets.profile_img.toString()} />
                 <p>{chatUser.userData.name} {Date.now() - chatUser.userData.lastSeen <= 70000 
@@ -129,6 +131,7 @@ export default function ChatBox() {
                     : null
                 }</p>
                 <img src={assets.help_icon} alt={assets.help_icon.toString()} className="help" />
+                <img onClick={() => setChatVisible(false)} src={assets.arrow_icon} alt="" className="arrow" />
             </div>
             <div className="chat-msg">
                 {messages.map((msg, idx) => (
@@ -165,7 +168,7 @@ export default function ChatBox() {
             </div>
         </div>
     )
-    : <div className='chat-welcome'>
+    : <div className={`chat-welcome ${chatVisible ? '' : 'hidden'}`}>
         <img src={assets.logo_icon} alt="" />
         <p>Chat anytime, anywhere...</p>
     </div>

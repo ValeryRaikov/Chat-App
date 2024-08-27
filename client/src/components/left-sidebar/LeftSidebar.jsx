@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -19,6 +19,8 @@ export default function LeftSidebar() {
         setChatUser,
         messagesId,
         setMessagesId,
+        chatVisible,
+        setChatVisible,
     } = useContext(AppContext);
     const [user, setUser] = useState(null);
     const [showSearch, setShowSearch] = useState(false);
@@ -88,6 +90,21 @@ export default function LeftSidebar() {
                     messageSeen: true,
                 }),
             });
+
+            const userSnap = await getDoc(doc(db, 'users', user.id));
+            const userData = userSnap.data();
+
+            setChat({
+                messageId: messagesRef.id,
+                lastMessage: '',
+                rId: user.id,
+                updatedAt: Date.now(),
+                messageSeen: true,
+                userData,
+            });
+
+            setShowSearch(false);
+            setChatVisible(true);
         } catch (err) {
             console.error(err);
             toast.error(err.message);
@@ -108,14 +125,29 @@ export default function LeftSidebar() {
             await updateDoc(userChatsRef, {
                 chatsData: userChatsData.chatsData,
             });
+            setChatVisible(true);
         } catch (err) {
             console.error(err);
             toast.error(err.message);
         }
     }
 
+    useEffect(() => {
+        const updateChatUserData = async () => {
+            if (chatUser) {
+                const userRef = doc(db, 'users', chatUser.userData.id);
+                const userSnap = await getDoc(userRef);
+                const userData = userSnap.data();
+
+                setChatUser(prev => ({...prev, userData}));
+            }
+        }
+
+        updateChatUserData();
+    }, [chatData]);
+
     return (
-        <div className="ls">
+        <div className={`ls ${chatVisible ? 'hidden' : ''}`}>
             <div className="ls-top">
                 <div className="ls-nav">
                     <img src={assets.logo} alt={assets.logo.toString()} className="logo" />
