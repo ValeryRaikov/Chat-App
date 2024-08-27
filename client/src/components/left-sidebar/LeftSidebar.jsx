@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import { arrayUnion, collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db, logout } from '../config/firebase';
 
 import './LeftSidebar.css';
 import assets from '../../assets/assets';
@@ -150,13 +150,13 @@ export default function LeftSidebar() {
         <div className={`ls ${chatVisible ? 'hidden' : ''}`}>
             <div className="ls-top">
                 <div className="ls-nav">
-                    <img src={assets.logo} alt={assets.logo.toString()} className="logo" />
+                    <img onClick={() => setChatUser(null)} src={assets.logo} alt={assets.logo.toString()} className="logo" />
                     <div className="menu">
                         <img src={assets.menu_icon} alt={assets.menu_icon.toString()} />
                         <div className="submenu">
                             <p onClick={() => navigate('/profile')}>Edit Profile</p>
                             <hr />
-                            <p>Logout</p>
+                            <p onClick={() => logout()}>Logout</p>
                         </div>
                     </div>
                 </div>
