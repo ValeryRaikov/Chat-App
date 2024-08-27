@@ -39,14 +39,17 @@ export default function RightSidebar() {
             <div className="rs-media">
                 <p>Media</p>
                 <div>
-                    {msgImages.map((url, idx) => (
-                        <img 
-                        onClick={() => window.open(url)}
-                        key={idx} 
-                        src={url} 
-                        alt="" 
-                        />
-                    ))}
+                    {msgImages.length > 0
+                        ? msgImages.map((url, idx) => (
+                            <img 
+                                onClick={() => window.open(url)}
+                                key={idx} 
+                                src={url} 
+                                alt="" 
+                            />
+                        ))
+                        : <p className="img-msg">No images sent</p>
+                    }
                 </div>
             </div>
             <button onClick={() => logout()}>Logout</button>
